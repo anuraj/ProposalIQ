@@ -1,15 +1,37 @@
+using System.ClientModel;
+using Microsoft.Extensions.AI;
+using OpenAI;
+using OpenAI.Chat;
+using ProposalIQ.Web.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var openAiApiKey = builder.Configuration["OpenRouter:ApiKey"];
+
+if (string.IsNullOrWhiteSpace(openAiApiKey))
+{
+    throw new InvalidOperationException("OpenAI API key is not configured.");
+}
+
+var chatClient = new ChatClient("openrouter/auto",
+                    new ApiKeyCredential(openAiApiKey),
+                    new OpenAIClientOptions
+                    {
+                        Endpoint = new Uri("https://openrouter.ai/api/v1/")
+                    }).AsIChatClient();
+
+builder.Services.AddChatClient(chatClient);
+
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IProposalAnalysisService, ProposalAnalysisService>();
+builder.Services.AddScoped<IProposalTextExtractor, ProposalTextExtractor>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

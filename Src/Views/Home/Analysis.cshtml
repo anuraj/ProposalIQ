@@ -1,0 +1,396 @@
+@model ProposalIQ.Web.Models.ProposalAnalysisResult
+
+@{
+    ViewData["Title"] = "Proposal Analysis";
+
+    var overallRisk = Model?.OverallRisk ?? "Unknown";
+
+    string RiskClass(string? level)
+    {
+        return level?.ToLowerInvariant() switch
+        {
+            "critical" => "piq-risk-critical",
+            "high" => "piq-risk-high",
+            "medium" => "piq-risk-medium",
+            "low" => "piq-risk-low",
+            _ => "piq-risk-unknown"
+        };
+    }
+
+    string RiskIcon(string? level)
+    {
+        return level?.ToLowerInvariant() switch
+        {
+            "critical" => "bi-exclamation-octagon-fill",
+            "high" => "bi-exclamation-triangle-fill",
+            "medium" => "bi-exclamation-circle-fill",
+            "low" => "bi-check-circle-fill",
+            _ => "bi-question-circle-fill"
+        };
+    }
+
+    string CategoryIcon(string? category)
+    {
+        return category?.ToLowerInvariant() switch
+        {
+            "scope" => "bi-bounding-box",
+            "commercial" => "bi-cash-stack",
+            "commercial terms" => "bi-cash-stack",
+            "timeline" => "bi-clock-history",
+            "delivery" => "bi-truck",
+            "dependencies" => "bi-diagram-3",
+            _ => "bi-shield-exclamation"
+        };
+    }
+}
+
+<div class="piq-analysis">
+
+    <div class="piq-analysis-page">
+
+        <!-- Breadcrumb -->
+
+        <div class="piq-breadcrumb">
+
+            <a asp-controller="Home"
+               asp-action="Index">
+                <i class="bi bi-arrow-left"></i>
+                New analysis
+            </a>
+
+            <span>/</span>
+
+            <span>Proposal analysis</span>
+
+        </div>
+
+
+        <!-- Header -->
+
+        <div class="piq-page-header">
+
+            <div>
+
+                <h1 class="piq-page-title">
+                    Proposal analysis
+                </h1>
+
+                <p class="piq-page-subtitle">
+                    AI-powered review of potential proposal risks
+                </p>
+
+            </div>
+
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="piq-new-analysis">
+
+                <i class="bi bi-plus-lg"></i>
+
+                Analyze another
+
+            </a>
+
+        </div>
+
+
+        <!-- Risk Hero -->
+
+        <div class="piq-risk-hero">
+
+            <div class="piq-risk-summary">
+
+                <div class="piq-risk-indicator @RiskClass(overallRisk)">
+
+                    <i class="bi @RiskIcon(overallRisk)"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="piq-risk-label">
+                        Overall risk
+                    </div>
+
+                    <div class="piq-risk-value">
+                        @overallRisk
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <div class="piq-summary-heading">
+                    Executive summary
+                </div>
+
+                <p class="piq-summary-text">
+                    @Model?.ExecutiveSummary
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Risk Categories -->
+
+        <div class="piq-category-grid">
+
+            <div class="piq-category">
+
+                <div class="piq-category-top">
+
+                    <div class="piq-category-icon">
+                        <i class="bi bi-bounding-box"></i>
+                    </div>
+
+                    <span class="piq-category-level @RiskClass(Model?.ScopeRisk?.Level)">
+                        @Model?.ScopeRisk?.Level
+                    </span>
+
+                </div>
+
+                <div class="piq-category-name">
+                    Scope
+                </div>
+
+                <div class="piq-category-count">
+                    @Model?.ScopeRisk?.IssueCount issue(s)
+                </div>
+
+                <div class="piq-category-summary">
+                    @Model?.ScopeRisk?.Summary
+                </div>
+
+            </div>
+
+
+            <div class="piq-category">
+
+                <div class="piq-category-top">
+
+                    <div class="piq-category-icon">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+
+                    <span class="piq-category-level @RiskClass(Model?.CommercialRisk?.Level)">
+                        @Model?.CommercialRisk?.Level
+                    </span>
+
+                </div>
+
+                <div class="piq-category-name">
+                    Commercial
+                </div>
+
+                <div class="piq-category-count">
+                    @Model?.CommercialRisk?.IssueCount issue(s)
+                </div>
+
+                <div class="piq-category-summary">
+                    @Model?.CommercialRisk?.Summary
+                </div>
+
+            </div>
+
+
+            <div class="piq-category">
+
+                <div class="piq-category-top">
+
+                    <div class="piq-category-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+
+                    <span class="piq-category-level @RiskClass(Model?.TimelineRisk?.Level)">
+                        @Model?.TimelineRisk?.Level
+                    </span>
+
+                </div>
+
+                <div class="piq-category-name">
+                    Timeline
+                </div>
+
+                <div class="piq-category-count">
+                    @Model?.TimelineRisk?.IssueCount issue(s)
+                </div>
+
+                <div class="piq-category-summary">
+                    @Model?.TimelineRisk?.Summary
+                </div>
+
+            </div>
+
+
+            <div class="piq-category">
+
+                <div class="piq-category-top">
+
+                    <div class="piq-category-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
+
+                    <span class="piq-category-level @RiskClass(Model?.DeliveryRisk?.Level)">
+                        @Model?.DeliveryRisk?.Level
+                    </span>
+
+                </div>
+
+                <div class="piq-category-name">
+                    Delivery
+                </div>
+
+                <div class="piq-category-count">
+                    @Model?.DeliveryRisk?.IssueCount issue(s)
+                </div>
+
+                <div class="piq-category-summary">
+                    @Model?.DeliveryRisk?.Summary
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Findings -->
+
+        <div class="piq-section-title">
+
+            <h2>
+                Findings
+            </h2>
+
+            <span class="piq-issue-count">
+                @(Model?.Issues?.Count ?? 0) issue(s) identified
+            </span>
+
+        </div>
+
+
+        @if (Model?.Issues != null && Model.Issues.Any())
+        {
+            <div class="piq-findings">
+
+                @foreach (var issue in Model.Issues)
+                {
+                    var issueRiskClass = RiskClass(issue.Severity);
+                    var issueIcon = RiskIcon(issue.Severity);
+                    var categoryIcon = CategoryIcon(issue.Category);
+
+                    <article class="piq-finding">
+
+                        <div class="piq-finding-main">
+
+                            <div class="piq-finding-header">
+
+                                <div class="piq-finding-title-wrapper">
+
+                                    <div class="piq-severity-icon @issueRiskClass">
+                                        <i class="bi @issueIcon"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <h3 class="piq-finding-title">
+                                            @issue.Title
+                                        </h3>
+
+                                        <div class="piq-finding-category">
+                                            <i class="bi @categoryIcon me-1"></i>
+                                            @issue.Category
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <span class="piq-severity-badge @issueRiskClass">
+                                    @issue.Severity
+                                </span>
+
+                            </div>
+
+
+                            <!-- Evidence -->
+
+                            <div class="piq-evidence">
+
+                                <div class="piq-evidence-label">
+                                    Evidence from proposal
+                                </div>
+
+                                <p class="piq-evidence-text">
+                                    "@issue.Evidence"
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Explanation + Recommendation -->
+
+                        <div class="piq-finding-grid">
+
+                            <div>
+
+                                <div class="piq-finding-subtitle">
+                                    Why it matters
+                                </div>
+
+                                <p class="piq-finding-description">
+                                    @issue.WhyItMatters
+                                </p>
+
+                            </div>
+
+
+                            <div>
+
+                                <div class="piq-finding-subtitle">
+                                    Recommendation
+                                </div>
+
+                                <p class="piq-finding-description">
+                                    @issue.Recommendation
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="piq-no-issues">
+
+                <div class="piq-no-issues-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div class="piq-no-issues-title">
+                    No significant issues identified
+                </div>
+
+                <p class="piq-no-issues-text">
+                    ProposalIQ did not identify any notable risks in the proposal.
+                </p>
+
+            </div>
+        }
+
+    </div>
+
+</div>

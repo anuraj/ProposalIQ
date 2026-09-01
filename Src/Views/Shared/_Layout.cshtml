@@ -1,56 +1,142 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - ProposalIQ</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ProposalIQ.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+          asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/lib/bootstrap-icons/font/bootstrap-icons.css"
+          asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+    <script src="~/js/theme.js"
+            asp-append-version="true"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ProposalIQ</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <header class="piq-header">
+
+        <div class="piq-header-inner">
+
+            <!-- Brand -->
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="piq-brand">
+
+                <span class="piq-brand-mark">
+                    P
+                </span>
+
+                <span class="piq-brand-name">
+                    ProposalIQ
+                </span>
+
+            </a>
+
+
+            <!-- Actions -->
+
+            <div class="piq-header-actions">
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="piq-new-analysis">
+
+                    <i class="bi bi-plus-lg"
+                       aria-hidden="true"></i>
+
+                    <span>
+                        New analysis
+                    </span>
+
+                </a>
+
+
+                <button type="button"
+                        id="piqThemeToggle"
+                        class="piq-theme-button"
+                        aria-label="Switch to dark mode"
+                        title="Switch to dark mode">
+
+                    <i id="piqThemeIcon"
+                       class="bi bi-moon"
+                       aria-hidden="true"></i>
+
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link" is-active-route asp-area="" asp-controller="Home" asp-action="Index"><i
-                                class="bi bi-house-door me-1"></i>Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" is-active-route asp-area="" asp-controller="Home"
-                                   asp-action="Privacy">Privacy</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-        </header>
-        <div class="container">
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
+
+            </div>
+
         </div>
 
-        <footer class="border-top footer text-muted">
-            <div class="container">
-                &copy; 2026 - ProposalIQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-            </div>
-        </footer>
-        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
-        @await RenderSectionAsync("Scripts", required: false)
-    </body>
+    </header>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <main class="piq-main">
+
+        @RenderBody()
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer class="piq-footer">
+
+        <div class="piq-footer-inner">
+
+            <span>
+                © @DateTime.Now.Year ProposalIQ
+            </span>
+
+            <a asp-controller="Home"
+               asp-action="Privacy">
+                Privacy
+            </a>
+
+        </div>
+
+    </footer>
+
+
+    <!-- =====================================================
+         APPLICATION SCRIPTS
+         ===================================================== -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
 
 </html>

@@ -1,8 +1,414 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "ProposalIQ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<div class="piq-home">
+    <section class="piq-hero">
+        <div class="container">
+            <div class="piq-eyebrow">
+                <span class="piq-eyebrow-dot"></span>
+                AI-powered proposal intelligence
+            </div>
+            <h1 class="piq-title">
+                Find the risks<br />
+                <span class="piq-title-accent">before your client does.</span>
+            </h1>
+            <p class="piq-subtitle">
+                ProposalIQ reviews your business proposals and helps you identify
+                scope, commercial, timeline, and delivery risks before you commit to a deal.
+            </p>
+        </div>
+    </section>
+    <section>
+        <div class="container">
+            <div class="piq-analyzer-wrapper">
+                <div class="piq-analyzer">
+                    <div class="piq-analyzer-head">
+                        <h2 class="piq-analyzer-title">
+                            Analyze a proposal
+                        </h2>
+                        <p class="piq-analyzer-description">
+                            Upload your proposal and provide some optional deal context.
+                        </p>
+                    </div>
+                    <form asp-controller="Home" asp-action="Analyze" method="post" enctype="multipart/form-data"
+                          id="proposalForm">
+                        <div class="piq-upload-container">
+                            <label for="proposalFile" class="piq-upload-zone" id="uploadZone">
+                                <div class="piq-upload-icon">
+                                    <i class="bi bi-cloud-arrow-up fs-3"></i>
+                                </div>
+                                <div class="piq-upload-title">
+                                    Drop your proposal here
+                                </div>
+                                <div class="piq-upload-text">
+                                    or <strong>browse files</strong> from your computer
+                                </div>
+                                <div class="piq-upload-meta">
+                                    PDF, DOCX or TXT · Maximum 20 MB
+                                </div>
+                            </label>
+                            <input type="file" id="proposalFile" name="proposalFile" accept=".pdf,.docx,.txt" />
+                            <div class="piq-file" id="selectedFile">
+                                <div class="piq-file-left">
+                                    <div class="piq-file-icon">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="piq-file-name" id="fileName">
+                                        </div>
+
+                                        <div class="piq-file-size" id="fileSize">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="piq-remove" id="removeFile" aria-label="Remove file">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+
+                            <div class="piq-error" id="uploadError">
+                            </div>
+                        </div>
+                        <div class="piq-context">
+                            <div class="piq-section-heading">
+                                <span class="piq-section-heading-title">
+                                    Deal context
+                                </span>
+                                <span class="piq-section-heading-subtitle">
+                                    optional
+                                </span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="piq-field-label" for="projectValue">
+                                        Proposed project value
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent">
+                                            $
+                                        </span>
+                                        <input type="number" id="projectValue" name="projectValue"
+                                               class="form-control piq-input" placeholder="15,000" min="0" step="100" />
+                                    </div>
+                                    <div class="piq-help">
+                                        Used when evaluating commercial risk.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="piq-field-label" for="hourlyRate">
+                                        Target hourly rate
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent">
+                                            $
+                                        </span>
+                                        <input type="number" id="hourlyRate" name="hourlyRate"
+                                               class="form-control piq-input" placeholder="100" min="0" step="5" />
+                                        <span class="input-group-text bg-transparent">
+                                            /hr
+                                        </span>
+                                    </div>
+                                    <div class="piq-help">
+                                        Helps identify pricing concerns.
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="piq-field-label" for="additionalContext">
+                                        Additional context
+                                    </label>
+                                    <textarea id="additionalContext" name="additionalContext"
+                                              class="form-control piq-input" rows="3"
+                                              placeholder="Anything the AI should know about the deal..."></textarea>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="piq-action">
+                            <button type="submit" id="analyzeButton" class="piq-analyze-btn" disabled>
+                                <span id="buttonText">
+                                    Analyze Proposal
+                                </span>
+                                <span id="buttonSpinner" class="spinner-border spinner-border-sm d-none"
+                                      aria-hidden="true">
+                                </span>
+                                <i id="buttonArrow" class="bi bi-arrow-right">
+                                </i>
+                            </button>
+                            <p class="piq-analyze-note">
+                                Your proposal is analyzed against scope, commercial,
+                                timeline, and delivery risks.
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="piq-capabilities">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="piq-capability">
+                        <div class="piq-capability-icon">
+                            <i class="bi bi-list-check"></i>
+                        </div>
+                        <h3 class="piq-capability-title">
+                            Scope & delivery
+                        </h3>
+                        <p class="piq-capability-text">
+                            Identify ambiguous scope, potential scope creep,
+                            dependencies, and delivery concerns.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="piq-capability">
+                        <div class="piq-capability-icon">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <h3 class="piq-capability-title">
+                            Commercial risk
+                        </h3>
+                        <p class="piq-capability-text">
+                            Review pricing, payment terms, project economics,
+                            and potentially unfavorable deal conditions.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="piq-capability">
+                        <div class="piq-capability-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="piq-capability-title">
+                            Hidden risks
+                        </h3>
+
+                        <p class="piq-capability-text">
+                            Surface assumptions, missing information,
+                            and potential problems hiding in the proposal.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
 </div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const fileInput = document.getElementById("proposalFile");
+        const uploadZone = document.getElementById("uploadZone");
+
+        const selectedFile = document.getElementById("selectedFile");
+        const fileName = document.getElementById("fileName");
+        const fileSize = document.getElementById("fileSize");
+
+        const removeFile = document.getElementById("removeFile");
+
+        const analyzeButton = document.getElementById("analyzeButton");
+        const proposalForm = document.getElementById("proposalForm");
+
+        const buttonText = document.getElementById("buttonText");
+        const buttonSpinner = document.getElementById("buttonSpinner");
+        const buttonArrow = document.getElementById("buttonArrow");
+
+        const uploadError = document.getElementById("uploadError");
+
+
+        const allowedExtensions = [".pdf", ".docx", ".txt"];
+        const maxFileSize = 20 * 1024 * 1024;
+
+
+        function formatFileSize(bytes) {
+
+            if (bytes < 1024) {
+                return bytes + " Bytes";
+            }
+
+            if (bytes < 1024 * 1024) {
+                return (bytes / 1024).toFixed(1) + " KB";
+            }
+
+            return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+
+
+        function showError(message) {
+
+            uploadError.textContent = message;
+            uploadError.classList.add("show");
+
+        }
+
+
+        function clearError() {
+
+            uploadError.textContent = "";
+            uploadError.classList.remove("show");
+
+        }
+
+
+        function setFile(file) {
+
+            clearError();
+
+            if (!file) {
+                return;
+            }
+
+            const parts = file.name.split(".");
+
+            const extension = parts.length > 1
+                ? "." + parts.pop().toLowerCase()
+                : "";
+
+
+            if (!allowedExtensions.includes(extension)) {
+
+                showError("Please upload a PDF, DOCX, or TXT file.");
+
+                fileInput.value = "";
+                return;
+            }
+
+
+            if (file.size > maxFileSize) {
+
+                showError("The selected file is larger than 20 MB.");
+
+                fileInput.value = "";
+                return;
+            }
+
+
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+
+            selectedFile.classList.add("show");
+
+            analyzeButton.disabled = false;
+
+        }
+
+
+        fileInput.addEventListener("change", function () {
+
+            if (fileInput.files.length > 0) {
+                setFile(fileInput.files[0]);
+            }
+
+        });
+
+
+        removeFile.addEventListener("click", function () {
+
+            fileInput.value = "";
+
+            selectedFile.classList.remove("show");
+
+            analyzeButton.disabled = true;
+
+            clearError();
+
+        });
+
+
+        uploadZone.addEventListener("dragenter", function (event) {
+
+            event.preventDefault();
+
+            uploadZone.classList.add("dragging");
+
+        });
+
+
+        uploadZone.addEventListener("dragover", function (event) {
+
+            event.preventDefault();
+
+            uploadZone.classList.add("dragging");
+
+        });
+
+
+        uploadZone.addEventListener("dragleave", function (event) {
+
+            event.preventDefault();
+
+            uploadZone.classList.remove("dragging");
+
+        });
+
+
+        uploadZone.addEventListener("drop", function (event) {
+
+            event.preventDefault();
+
+            uploadZone.classList.remove("dragging");
+
+
+            const files = event.dataTransfer.files;
+
+            if (!files || files.length === 0) {
+                return;
+            }
+
+
+            try {
+
+                const dataTransfer = new DataTransfer();
+
+                dataTransfer.items.add(files[0]);
+
+                fileInput.files = dataTransfer.files;
+
+            }
+            catch {
+                // Browser doesn't support assigning dropped files.
+            }
+
+
+            setFile(files[0]);
+
+        });
+
+
+        proposalForm.addEventListener("submit", function () {
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+
+                showError("Please select a proposal first.");
+
+                return;
+
+            }
+
+
+            analyzeButton.disabled = true;
+
+            buttonText.textContent = "Analyzing proposal...";
+
+            buttonSpinner.classList.remove("d-none");
+
+            buttonArrow.classList.add("d-none");
+
+        });
+
+    });
+
+</script>
