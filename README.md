@@ -1,1 +1,1 @@
-# ProposalIQ
+# Proposal IQ
