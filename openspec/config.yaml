@@ -1,0 +1,31 @@
+schema: spec-driven
+githubCopilot:
+  cloudAgent: false
+
+context: |
+  Tech stack: ASP.NET Core MVC targeting .NET 10, C#, Razor views, Bootstrap, and jQuery.
+  Architecture: the web app is in Src/ (ProposalIQ.Web); controllers handle HTTP requests, Services/ owns proposal text extraction and AI analysis behind interfaces, Models/ defines request and result contracts, and Views/ contains Razor UI.
+  Domain: sellers upload .txt, .docx, or .pdf business proposals and receive structured, seller-focused risk analysis covering scope, commercial, timeline, and delivery risks.
+  AI integration: use Microsoft.Extensions.AI and Microsoft.Extensions.AI.OpenAI with OpenRouter. The API key is read from OpenRouter:ApiKey and must remain in .NET user secrets or another configuration provider, never source control.
+  Document parsing: use DocumentFormat.OpenXml for .docx and UglyToad.PdfPig for .pdf.
+  Testing: tests live in Tests/ and use xUnit. Run them with `dotnet test` from Tests/.
+  Conventions: nullable reference types and implicit usings are enabled. Keep controllers thin, use the existing service interfaces for business logic, preserve the MVC routing and dependency-injection patterns, and keep UI changes consistent with the existing Bootstrap-based presentation.
+
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Always include a "Non-goals" section
+  specs:
+    - Use Given/When/Then format
+    - Reference existing patterns before inventing new ones
+  tasks:
+    - Break tasks into chunks of max 2 hours
+
+operations:
+  apply:
+    guidance:
+      - Keep test summaries concise
+      - Run focused tests before the full suite
+  archive:
+    guidance:
+      - Summarize the archive outcome before finishing
