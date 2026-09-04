@@ -1,24 +1,17 @@
-using System.ClientModel;
-using Microsoft.Extensions.AI;
-using OpenAI;
-using OpenAI.Chat;
+using ProposalIQ.Web.Configuration;
 using ProposalIQ.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var openAiApiKey = builder.Configuration["OpenRouter:ApiKey"];
+var aiOptions = builder.Configuration.GetSection("Ai").Get<AiProviderOptions>() ?? new AiProviderOptions();
 
-if (string.IsNullOrWhiteSpace(openAiApiKey))
+// Backward compatibility with the legacy top-level OpenRouter:ApiKey user-secret.
+if (string.IsNullOrWhiteSpace(aiOptions.OpenRouter.ApiKey))
 {
-    throw new InvalidOperationException("OpenAI API key is not configured.");
+    aiOptions.OpenRouter.ApiKey = builder.Configuration["OpenRouter:ApiKey"] ?? string.Empty;
 }
 
-var chatClient = new ChatClient("openrouter/auto",
-                    new ApiKeyCredential(openAiApiKey),
-                    new OpenAIClientOptions
-                    {
-                        Endpoint = new Uri("https://openrouter.ai/api/v1/")
-                    }).AsIChatClient();
+var chatClient = ChatClientFactory.Create(aiOptions);
 
 builder.Services.AddChatClient(chatClient);
 

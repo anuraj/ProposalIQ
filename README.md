@@ -24,17 +24,45 @@ Tests/                    ProposalIQ.Web.Tests test project
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- An [OpenRouter](https://openrouter.ai/) API key (used for AI chat completions)
+- Access to an AI chat provider: [OpenRouter](https://openrouter.ai/) (default), OpenAI, Azure OpenAI, or a local OpenAI-compatible server (e.g. Ollama, LM Studio)
 
 ## Configuration
 
-The app requires an OpenRouter API key, configured via .NET user secrets (or another configuration provider) under `OpenRouter:ApiKey`.
+The app selects its AI provider from the `Ai:Provider` configuration key (`OpenRouter`, `OpenAI`, `AzureOpenAI`, or `Local`), defaulting to `OpenRouter` if unset. Set secrets via .NET user secrets (or another configuration provider) from the `Src` folder — never commit real keys.
 
-From the `Src` folder:
+**OpenRouter (default)**
 
 ```powershell
-dotnet user-secrets set "OpenRouter:ApiKey" "<your-api-key>"
+dotnet user-secrets set "Ai:Provider" "OpenRouter"
+dotnet user-secrets set "Ai:OpenRouter:ApiKey" "<your-api-key>"
 ```
+
+**OpenAI**
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "OpenAI"
+dotnet user-secrets set "Ai:OpenAI:Model" "gpt-4o-mini"
+dotnet user-secrets set "Ai:OpenAI:ApiKey" "<your-api-key>"
+```
+
+**Azure OpenAI**
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "AzureOpenAI"
+dotnet user-secrets set "Ai:AzureOpenAI:Endpoint" "https://<your-resource>.openai.azure.com/"
+dotnet user-secrets set "Ai:AzureOpenAI:Deployment" "<your-deployment-name>"
+dotnet user-secrets set "Ai:AzureOpenAI:ApiKey" "<your-api-key>"
+```
+
+**Local (OpenAI-compatible server, e.g. Ollama)**
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "Local"
+dotnet user-secrets set "Ai:Local:Model" "llama3"
+dotnet user-secrets set "Ai:Local:Endpoint" "http://localhost:11434/v1/"
+```
+
+The legacy top-level `OpenRouter:ApiKey` key is still read as a fallback if `Ai:OpenRouter:ApiKey` is not set.
 
 ## Running the app
 
@@ -55,7 +83,7 @@ dotnet test
 ## Tech stack
 
 - ASP.NET Core MVC (.NET 10)
-- `Microsoft.Extensions.AI` / `Microsoft.Extensions.AI.OpenAI` for LLM integration (via OpenRouter)
+- `Microsoft.Extensions.AI` / `Microsoft.Extensions.AI.OpenAI` / `Azure.AI.OpenAI` for LLM integration (OpenRouter, OpenAI, Azure OpenAI, or a local OpenAI-compatible server)
 - `DocumentFormat.OpenXml` for `.docx` parsing
 - `UglyToad.PdfPig` for `.pdf` parsing
 - Bootstrap for UI
