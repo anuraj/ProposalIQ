@@ -1,5 +1,9 @@
 # AI Provider Configuration
 
+## Purpose
+
+Defines how ProposalIQ selects and validates the configured AI chat provider used for proposal analysis.
+
 ## Requirements
 
 ### Requirement: Configurable AI Provider Selection

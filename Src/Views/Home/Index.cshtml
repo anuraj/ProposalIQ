@@ -46,10 +46,10 @@
                                     or <strong>browse files</strong> from your computer
                                 </div>
                                 <div class="piq-upload-meta">
-                                    PDF, DOCX or TXT · Maximum 20 MB
+                                    PDF, DOCX, PPTX or TXT · Maximum 20 MB
                                 </div>
                             </label>
-                            <input type="file" id="proposalFile" name="proposalFile" accept=".pdf,.docx,.txt" />
+                            <input type="file" id="proposalFile" name="proposalFile" accept=".pdf,.docx,.pptx,.txt" />
                             <div class="piq-file" id="selectedFile">
                                 <div class="piq-file-left">
                                     <div class="piq-file-icon">
@@ -229,7 +229,7 @@
         const uploadError = document.getElementById("uploadError");
 
 
-        const allowedExtensions = [".pdf", ".docx", ".txt"];
+    const allowedExtensions = [".pdf", ".docx", ".pptx", ".txt"];
         const maxFileSize = 20 * 1024 * 1024;
 
 
@@ -280,7 +280,7 @@
 
             if (!allowedExtensions.includes(extension)) {
 
-                showError("Please upload a PDF, DOCX, or TXT file.");
+                showError("Please upload a PDF, DOCX, PPTX, or TXT file.");
 
                 fileInput.value = "";
                 return;
