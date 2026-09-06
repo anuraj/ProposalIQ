@@ -77,6 +77,8 @@ public class HomeController(
     AnalyzeProposalRequest request,
     CancellationToken cancellationToken)
     {
+        ViewBag.ModelStatus = GetCurrentModelStatus();
+
         if (request.ProposalFile == null ||
             request.ProposalFile.Length == 0)
         {
@@ -120,7 +122,11 @@ public class HomeController(
         }
         catch (OperationCanceledException)
         {
-            return BadRequest("Analysis was cancelled.");
+            ModelState.AddModelError(
+                "ProposalFile",
+                "Analysis was cancelled.");
+
+            return View("Index", request);
         }
         catch (Exception ex)
         {

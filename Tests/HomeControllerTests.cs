@@ -58,7 +58,11 @@ namespace ProposalIQ.Web.Tests
             var result = await controller.Analyze(new AnalyzeProposalRequest { ProposalFile = null }, CancellationToken.None);
 
             // Assert
-            Assert.IsType<ViewResult>(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Index", viewResult.ViewName);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Contains(controller.ModelState["ProposalFile"]!.Errors, e => e.ErrorMessage.Contains("upload a proposal"));
+            Assert.NotNull(controller.ViewBag.ModelStatus);
         }
 
         [Fact]
@@ -86,12 +90,77 @@ namespace ProposalIQ.Web.Tests
             var viewResult = Assert.IsType<ViewResult>(result);
 
             Assert.Equal("Index", viewResult.ViewName);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Contains(controller.ModelState["ProposalFile"]!.Errors, e => e.ErrorMessage.Contains("No readable text"));
+            Assert.NotNull(controller.ViewBag.ModelStatus);
             mockProposalAnalysisService.Verify(
                 service => service.AnalyzeAsync(
                     It.IsAny<string>(),
                     It.IsAny<AnalyzeProposalRequest>(),
                     It.IsAny<CancellationToken>()),
                 Times.Never);
+        }
+
+        [Fact]
+        public async Task Analyze_ReturnsIndexView_WithModelError_WhenAnalysisFailsWithException()
+        {
+            var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
+            var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
+            var file = new FormFile(
+                new MemoryStream(Encoding.UTF8.GetBytes("Sample proposal text")),
+                0,
+                20,
+                "proposalFile",
+                "proposal.txt");
+
+            mockProposalTextExtractor
+                .Setup(extractor => extractor.ExtractTextAsync(file, It.IsAny<CancellationToken>()))
+                .ReturnsAsync("Sample proposal text");
+
+            mockProposalAnalysisService
+                .Setup(service => service.AnalyzeAsync(It.IsAny<string>(), It.IsAny<AnalyzeProposalRequest>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("AI model rate limit exceeded"));
+
+            var controller = new HomeController(mockProposalTextExtractor.Object, mockProposalAnalysisService.Object);
+
+            var result = await controller.Analyze(
+                new AnalyzeProposalRequest { ProposalFile = file, ProjectValue = 5000m },
+                CancellationToken.None);
+
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Index", viewResult.ViewName);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Contains(controller.ModelState["ProposalFile"]!.Errors, e => e.ErrorMessage.Contains("AI model rate limit exceeded"));
+            Assert.NotNull(controller.ViewBag.ModelStatus);
+        }
+
+        [Fact]
+        public async Task Analyze_ReturnsIndexView_WithModelError_WhenCancelled()
+        {
+            var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
+            var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
+            var file = new FormFile(
+                new MemoryStream(Encoding.UTF8.GetBytes("Sample proposal text")),
+                0,
+                20,
+                "proposalFile",
+                "proposal.txt");
+
+            mockProposalTextExtractor
+                .Setup(extractor => extractor.ExtractTextAsync(file, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            var controller = new HomeController(mockProposalTextExtractor.Object, mockProposalAnalysisService.Object);
+
+            var result = await controller.Analyze(
+                new AnalyzeProposalRequest { ProposalFile = file },
+                CancellationToken.None);
+
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Index", viewResult.ViewName);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Contains(controller.ModelState["ProposalFile"]!.Errors, e => e.ErrorMessage.Contains("Analysis was cancelled"));
+            Assert.NotNull(controller.ViewBag.ModelStatus);
         }
 
         [Fact]

@@ -429,3 +429,6 @@ FodyWeavers.xsd
 *.msp
 
 lib
+Src/proposaliq_cache.db
+Src/proposaliq_cache.db-shm
+Src/proposaliq_cache.db-wal

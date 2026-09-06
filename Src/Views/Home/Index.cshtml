@@ -1,8 +1,10 @@
-﻿@{
+﻿@model ProposalIQ.Web.Models.AnalyzeProposalRequest
+@{
     ViewData["Title"] = "ProposalIQ";
     var modelStatus = ViewBag.ModelStatus as ProposalIQ.Web.Models.AiModelStatusViewModel;
     var isModelReady = modelStatus == null || modelStatus.IsReady;
     var isModelFaulted = modelStatus != null && modelStatus.IsFaulted;
+    var hasErrors = !ViewData.ModelState.IsValid;
 }
 
 
@@ -26,6 +28,26 @@
     <section>
         <div class="container">
             <div class="piq-analyzer-wrapper">
+                @if (hasErrors)
+                {
+                    <div id="serverErrorAlert" class="alert alert-danger d-flex align-items-start gap-3 mb-4 rounded-4 shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill text-danger fs-4 flex-shrink-0 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block mb-1">Analysis Failed</strong>
+                            <div class="text-danger-emphasis">
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    foreach (var error in modelState.Errors)
+                                    {
+                                        <div>@error.ErrorMessage</div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
                 <!-- AI Model Status Warning / Progress Alert -->
                 <div id="modelStatusBanner" class="alert @(isModelFaulted ? "alert-danger" : "alert-warning") d-flex align-items-center gap-3 mb-4 rounded-4 @(isModelReady && !isModelFaulted ? "d-none" : "")" role="alert">
                     <div id="modelStatusSpinner" class="spinner-border spinner-border-sm text-warning flex-shrink-0 @(isModelFaulted ? "d-none" : "")" role="status">
@@ -118,6 +140,7 @@
                                             $
                                         </span>
                                         <input type="number" id="projectValue" name="projectValue"
+                                               value="@(Model?.ProjectValue)"
                                                class="form-control piq-input" placeholder="15,000" min="0" step="100" />
                                     </div>
                                     <div class="piq-help">
@@ -133,6 +156,7 @@
                                             $
                                         </span>
                                         <input type="number" id="hourlyRate" name="hourlyRate"
+                                               value="@(Model?.HourlyRate)"
                                                class="form-control piq-input" placeholder="100" min="0" step="5" />
                                         <span class="input-group-text bg-transparent">
                                             /hr
@@ -148,7 +172,7 @@
                                     </label>
                                     <textarea id="additionalContext" name="additionalContext"
                                               class="form-control piq-input" rows="3"
-                                              placeholder="Anything the AI should know about the deal..."></textarea>
+                                              placeholder="Anything the AI should know about the deal...">@(Model?.AdditionalContext)</textarea>
 
                                 </div>
                             </div>
@@ -304,6 +328,10 @@
             uploadError.textContent = "";
             uploadError.classList.remove("show");
 
+            const serverErrorAlert = document.getElementById("serverErrorAlert");
+            if (serverErrorAlert) {
+                serverErrorAlert.classList.add("d-none");
+            }
         }
 
 
