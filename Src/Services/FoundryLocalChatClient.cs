@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.AI.Foundry.Local;
 using Microsoft.Extensions.AI;
-using BetalgoChatMessage = Betalgo.Ranul.OpenAI.ObjectModels.RequestModels.ChatMessage;
 
 namespace ProposalIQ.Web.Services;
 
-// Bridges the Foundry Local SDK's chat client into Microsoft.Extensions.AI.IChatClient.
+// Bridges the Foundry Local SDK's chat session into Microsoft.Extensions.AI.IChatClient.
 public class FoundryLocalChatClient(FoundryLocalModelState state) : IChatClient
 {
     private readonly FoundryLocalModelState _state = state;
@@ -15,12 +15,11 @@ public class FoundryLocalChatClient(FoundryLocalModelState state) : IChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var chatClient = GetReadyChatClientOrThrow();
-        var betalgoMessages = messages.Select(ToBetalgoMessage).ToList();
+        using var session = GetReadyChatSessionOrThrow();
+        using var request = CreateRequest(messages, options);
 
-        var completion = await chatClient.CompleteChatAsync(betalgoMessages, cancellationToken);
-
-        var content = completion.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
+        using var response = await session.ProcessRequestAsync(request, cancellationToken);
+        var content = ExtractResponseText(response);
 
         return new ChatResponse(new ChatMessage(ChatRole.Assistant, content));
     }
@@ -30,17 +29,37 @@ public class FoundryLocalChatClient(FoundryLocalModelState state) : IChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var chatClient = GetReadyChatClientOrThrow();
-        var betalgoMessages = messages.Select(ToBetalgoMessage).ToList();
+        using var session = GetReadyChatSessionOrThrow();
+        using var request = CreateRequest(messages, options);
 
-        await foreach (var chunk in chatClient.CompleteChatStreamingAsync(betalgoMessages, cancellationToken))
+        session.SetStreaming(true);
+        var stream = session.ProcessStreamingRequestAsync(request, cancellationToken);
+
+        await using (stream)
         {
-            var delta = chunk.Choices?.FirstOrDefault()?.Delta?.Content
-                ?? chunk.Choices?.FirstOrDefault()?.Message?.Content;
-
-            if (!string.IsNullOrEmpty(delta))
+            await foreach (var item in stream.WithCancellation(cancellationToken))
             {
-                yield return new ChatResponseUpdate(ChatRole.Assistant, delta);
+                if (item is TextItem textItem && !string.IsNullOrEmpty(textItem.Text))
+                {
+                    yield return new ChatResponseUpdate(ChatRole.Assistant, textItem.Text);
+                }
+                else if (item is MessageItem messageItem)
+                {
+                    if (messageItem.IsSimpleText() && !string.IsNullOrEmpty(messageItem.GetSimpleText()))
+                    {
+                        yield return new ChatResponseUpdate(ChatRole.Assistant, messageItem.GetSimpleText());
+                    }
+                    else
+                    {
+                        foreach (var part in messageItem.Parts)
+                        {
+                            if (part is TextItem partText && !string.IsNullOrEmpty(partText.Text))
+                            {
+                                yield return new ChatResponseUpdate(ChatRole.Assistant, partText.Text);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -54,7 +73,7 @@ public class FoundryLocalChatClient(FoundryLocalModelState state) : IChatClient
     {
     }
 
-    private OpenAIChatClient GetReadyChatClientOrThrow()
+    private ChatSession GetReadyChatSessionOrThrow()
     {
         var fault = _state.Fault;
 
@@ -65,17 +84,85 @@ public class FoundryLocalChatClient(FoundryLocalModelState state) : IChatClient
                 fault);
         }
 
-        return _state.TryGetChatClient()
+        return _state.TryCreateChatSession()
             ?? throw new InvalidOperationException(
                 "The Foundry Local model is still preparing. Please try again shortly.");
     }
 
-    private static BetalgoChatMessage ToBetalgoMessage(ChatMessage message)
+    private static Request CreateRequest(IEnumerable<ChatMessage> messages, ChatOptions? options)
     {
-        return new BetalgoChatMessage
+        var request = new Request();
+
+        if (options != null)
         {
-            Role = message.Role.Value,
-            Content = message.Text
-        };
+            var search = new SearchOptions
+            {
+                Temperature = options.Temperature,
+                MaxOutputTokens = options.MaxOutputTokens,
+                TopP = options.TopP,
+                TopK = options.TopK
+            };
+
+            if (search.Temperature.HasValue ||
+                search.MaxOutputTokens.HasValue ||
+                search.TopP.HasValue ||
+                search.TopK.HasValue)
+            {
+                request.SetOptions(new RequestOptions { Search = search });
+            }
+        }
+
+        foreach (var message in messages)
+        {
+            request.AddItem(ToMessageItem(message));
+        }
+
+        return request;
+    }
+
+    private static MessageItem ToMessageItem(ChatMessage message)
+    {
+        var role = message.Role == ChatRole.System
+            ? MessageRole.System
+            : message.Role == ChatRole.Assistant
+                ? MessageRole.Assistant
+                : message.Role == ChatRole.User
+                    ? MessageRole.User
+                    : MessageRole.User;
+
+        var text = string.IsNullOrEmpty(message.Text) ? " " : message.Text;
+        return new MessageItem(role, text);
+    }
+
+    private static string ExtractResponseText(Response response)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < response.ItemCount; i++)
+        {
+            var item = response.GetItem(i);
+            if (item is MessageItem messageItem)
+            {
+                if (messageItem.IsSimpleText())
+                {
+                    sb.Append(messageItem.GetSimpleText());
+                }
+                else
+                {
+                    foreach (var part in messageItem.Parts)
+                    {
+                        if (part is TextItem textItem)
+                        {
+                            sb.Append(textItem.Text);
+                        }
+                    }
+                }
+            }
+            else if (item is TextItem textItem)
+            {
+                sb.Append(textItem.Text);
+            }
+        }
+
+        return sb.ToString();
     }
 }

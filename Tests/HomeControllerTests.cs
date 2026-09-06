@@ -93,5 +93,84 @@ namespace ProposalIQ.Web.Tests
                     It.IsAny<CancellationToken>()),
                 Times.Never);
         }
+
+        [Fact]
+        public void ModelStatus_ReturnsReady_ForNonFoundryLocalProvider()
+        {
+            var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
+            var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
+            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.OpenAI };
+
+            var controller = new HomeController(
+                mockProposalTextExtractor.Object,
+                mockProposalAnalysisService.Object,
+                aiOptions,
+                new FoundryLocalModelState());
+
+            var result = controller.ModelStatus();
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var status = Assert.IsType<AiModelStatusViewModel>(jsonResult.Value);
+
+            Assert.True(status.IsReady);
+            Assert.False(status.IsFaulted);
+            Assert.Equal("OpenAI", status.Provider);
+            Assert.Equal(100, status.ProgressPercent);
+        }
+
+        [Fact]
+        public void ModelStatus_ReturnsDownloadingState_ForFoundryLocalDuringDownload()
+        {
+            var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
+            var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
+            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal };
+            var foundryLocalState = new FoundryLocalModelState();
+            foundryLocalState.SetDownloading(55, "Downloading model weights...");
+
+            var controller = new HomeController(
+                mockProposalTextExtractor.Object,
+                mockProposalAnalysisService.Object,
+                aiOptions,
+                foundryLocalState);
+
+            var result = controller.ModelStatus();
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var status = Assert.IsType<AiModelStatusViewModel>(jsonResult.Value);
+
+            Assert.False(status.IsReady);
+            Assert.False(status.IsFaulted);
+            Assert.Equal("FoundryLocal", status.Provider);
+            Assert.Equal(55, status.ProgressPercent);
+            Assert.Equal("Downloading", status.Stage);
+            Assert.Equal("Downloading model weights...", status.Message);
+        }
+
+        [Fact]
+        public void ModelStatus_ReturnsFaultedState_WhenFoundryLocalPreparationFails()
+        {
+            var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
+            var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
+            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal };
+            var foundryLocalState = new FoundryLocalModelState();
+            foundryLocalState.MarkFaulted(new InvalidOperationException("Download server unavailable"), "Failed to download model");
+
+            var controller = new HomeController(
+                mockProposalTextExtractor.Object,
+                mockProposalAnalysisService.Object,
+                aiOptions,
+                foundryLocalState);
+
+            var result = controller.ModelStatus();
+
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var status = Assert.IsType<AiModelStatusViewModel>(jsonResult.Value);
+
+            Assert.False(status.IsReady);
+            Assert.True(status.IsFaulted);
+            Assert.Equal("FoundryLocal", status.Provider);
+            Assert.Equal("Faulted", status.Stage);
+            Assert.Equal("Failed to download model", status.Message);
+        }
     }
 }

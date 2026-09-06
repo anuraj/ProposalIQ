@@ -3,18 +3,15 @@ using ProposalIQ.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var aiOptions = builder.Configuration.GetSection("Ai").Get<AiProviderOptions>() ?? new AiProviderOptions();
-
-// Backward compatibility with the legacy top-level OpenRouter:ApiKey user-secret.
-if (string.IsNullOrWhiteSpace(aiOptions.OpenRouter.ApiKey))
-{
-    aiOptions.OpenRouter.ApiKey = builder.Configuration["OpenRouter:ApiKey"] ?? string.Empty;
-}
+var aiOptions = builder.Configuration.GetSection("Ai")
+    .Get<AiProviderOptions>() ?? new AiProviderOptions();
 
 var foundryLocalState = new FoundryLocalModelState();
 var chatClient = ChatClientFactory.Create(aiOptions, foundryLocalState);
 
 builder.Services.AddChatClient(chatClient);
+builder.Services.AddSingleton(aiOptions);
+builder.Services.AddSingleton(foundryLocalState);
 
 builder.Services.AddControllersWithViews();
 
@@ -23,7 +20,6 @@ builder.Services.AddScoped<IProposalTextExtractor, ProposalTextExtractor>();
 
 if (aiOptions.Provider == AiProvider.FoundryLocal)
 {
-    builder.Services.AddSingleton(foundryLocalState);
     builder.Services.AddHostedService(sp => new FoundryLocalModelPreparationService(
         aiOptions.FoundryLocal,
         foundryLocalState,

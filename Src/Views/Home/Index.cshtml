@@ -1,5 +1,8 @@
 ﻿@{
     ViewData["Title"] = "ProposalIQ";
+    var modelStatus = ViewBag.ModelStatus as ProposalIQ.Web.Models.AiModelStatusViewModel;
+    var isModelReady = modelStatus == null || modelStatus.IsReady;
+    var isModelFaulted = modelStatus != null && modelStatus.IsFaulted;
 }
 
 
@@ -23,6 +26,30 @@
     <section>
         <div class="container">
             <div class="piq-analyzer-wrapper">
+                <!-- AI Model Status Warning / Progress Alert -->
+                <div id="modelStatusBanner" class="alert @(isModelFaulted ? "alert-danger" : "alert-warning") d-flex align-items-center gap-3 mb-4 rounded-4 @(isModelReady && !isModelFaulted ? "d-none" : "")" role="alert">
+                    <div id="modelStatusSpinner" class="spinner-border spinner-border-sm text-warning flex-shrink-0 @(isModelFaulted ? "d-none" : "")" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <i id="modelStatusErrorIcon" class="bi bi-exclamation-octagon-fill text-danger fs-5 flex-shrink-0 @(isModelFaulted ? "" : "d-none")"></i>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong id="modelStatusTitle">
+                                @(isModelFaulted ? "AI Model Preparation Failed" : "Local AI Model Preparing")
+                            </strong>
+                            <span id="modelStatusBadge" class="badge @(isModelFaulted ? "bg-danger" : "bg-warning text-dark")">
+                                @(isModelFaulted ? "Faulted" : $"{modelStatus?.ProgressPercent ?? 0}%")
+                            </span>
+                        </div>
+                        <div id="modelStatusText" class="small text-secondary">
+                            @(modelStatus?.Message ?? "The local AI model is downloading in the background. Analysis will be available once download completes.")
+                        </div>
+                        <div id="modelStatusProgressBarContainer" class="progress mt-2 @(isModelFaulted ? "d-none" : "")" style="height: 6px;">
+                            <div id="modelStatusProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: @(modelStatus?.ProgressPercent ?? 0)%;" aria-valuenow="@(modelStatus?.ProgressPercent ?? 0)" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="piq-analyzer">
                     <div class="piq-analyzer-head">
                         <h2 class="piq-analyzer-title">
@@ -228,10 +255,27 @@
 
         const uploadError = document.getElementById("uploadError");
 
+        const modelStatusBanner = document.getElementById("modelStatusBanner");
+        const modelStatusSpinner = document.getElementById("modelStatusSpinner");
+        const modelStatusErrorIcon = document.getElementById("modelStatusErrorIcon");
+        const modelStatusTitle = document.getElementById("modelStatusTitle");
+        const modelStatusBadge = document.getElementById("modelStatusBadge");
+        const modelStatusText = document.getElementById("modelStatusText");
+        const modelStatusProgressBar = document.getElementById("modelStatusProgressBar");
+        const modelStatusProgressBarContainer = document.getElementById("modelStatusProgressBarContainer");
 
-    const allowedExtensions = [".pdf", ".docx", ".pptx", ".txt"];
+        let isModelReady = @(isModelReady ? "true" : "false");
+        let isModelFaulted = @(isModelFaulted ? "true" : "false");
+        let hasValidSelectedFile = false;
+
+        const allowedExtensions = [".pdf", ".docx", ".pptx", ".txt"];
         const maxFileSize = 20 * 1024 * 1024;
 
+        function updateAnalyzeButtonState() {
+            if (analyzeButton) {
+                analyzeButton.disabled = !(hasValidSelectedFile && isModelReady && !isModelFaulted);
+            }
+        }
 
         function formatFileSize(bytes) {
 
@@ -268,6 +312,8 @@
             clearError();
 
             if (!file) {
+                hasValidSelectedFile = false;
+                updateAnalyzeButtonState();
                 return;
             }
 
@@ -283,6 +329,8 @@
                 showError("Please upload a PDF, DOCX, PPTX, or TXT file.");
 
                 fileInput.value = "";
+                hasValidSelectedFile = false;
+                updateAnalyzeButtonState();
                 return;
             }
 
@@ -292,6 +340,8 @@
                 showError("The selected file is larger than 20 MB.");
 
                 fileInput.value = "";
+                hasValidSelectedFile = false;
+                updateAnalyzeButtonState();
                 return;
             }
 
@@ -301,9 +351,82 @@
 
             selectedFile.classList.add("show");
 
-            analyzeButton.disabled = false;
-
+            hasValidSelectedFile = true;
+            updateAnalyzeButtonState();
         }
+
+        // Poll model status if using Foundry Local and not yet ready
+        let pollTimer = null;
+
+        function pollModelStatus() {
+            fetch('/Home/ModelStatus')
+                .then(response => response.json())
+                .then(status => {
+                    if (status.isReady) {
+                        isModelReady = true;
+                        isModelFaulted = false;
+                        if (modelStatusBanner) {
+                            modelStatusBanner.classList.add("d-none");
+                        }
+                        updateAnalyzeButtonState();
+                        if (pollTimer) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                        }
+                    } else if (status.isFaulted) {
+                        isModelReady = false;
+                        isModelFaulted = true;
+                        if (modelStatusBanner) {
+                            modelStatusBanner.classList.remove("d-none", "alert-warning");
+                            modelStatusBanner.classList.add("alert-danger");
+                        }
+                        if (modelStatusSpinner) modelStatusSpinner.classList.add("d-none");
+                        if (modelStatusErrorIcon) modelStatusErrorIcon.classList.remove("d-none");
+                        if (modelStatusTitle) modelStatusTitle.textContent = "AI Model Preparation Failed";
+                        if (modelStatusBadge) {
+                            modelStatusBadge.className = "badge bg-danger";
+                            modelStatusBadge.textContent = "Faulted";
+                        }
+                        if (modelStatusText) modelStatusText.textContent = status.message;
+                        if (modelStatusProgressBarContainer) modelStatusProgressBarContainer.classList.add("d-none");
+                        updateAnalyzeButtonState();
+                        if (pollTimer) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                        }
+                    } else {
+                        isModelReady = false;
+                        isModelFaulted = false;
+                        if (modelStatusBanner) {
+                            modelStatusBanner.classList.remove("d-none", "alert-danger");
+                            modelStatusBanner.classList.add("alert-warning");
+                        }
+                        if (modelStatusSpinner) modelStatusSpinner.classList.remove("d-none");
+                        if (modelStatusErrorIcon) modelStatusErrorIcon.classList.add("d-none");
+                        if (modelStatusTitle) modelStatusTitle.textContent = "Local AI Model Preparing";
+                        if (modelStatusBadge) {
+                            modelStatusBadge.className = "badge bg-warning text-dark";
+                            modelStatusBadge.textContent = `${status.progressPercent}%`;
+                        }
+                        if (modelStatusText) modelStatusText.textContent = status.message;
+                        if (modelStatusProgressBar) {
+                            modelStatusProgressBar.style.width = `${status.progressPercent}%`;
+                            modelStatusProgressBar.setAttribute("aria-valuenow", status.progressPercent);
+                        }
+                        if (modelStatusProgressBarContainer) modelStatusProgressBarContainer.classList.remove("d-none");
+                        updateAnalyzeButtonState();
+                    }
+                })
+                .catch(() => {
+                    // Ignore transient network errors during polling
+                });
+        }
+
+        if (!isModelReady && !isModelFaulted) {
+            pollTimer = setInterval(pollModelStatus, 2500);
+        }
+
+        updateAnalyzeButtonState();
 
 
         fileInput.addEventListener("change", function () {

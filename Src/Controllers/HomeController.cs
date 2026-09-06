@@ -1,19 +1,63 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using ProposalIQ.Web.Configuration;
 using ProposalIQ.Web.Models;
 using ProposalIQ.Web.Services;
 
 namespace ProposalIQ.Web.Controllers;
 
-public class HomeController(IProposalTextExtractor textExtractor,
-    IProposalAnalysisService analysisService) : Controller
+public class HomeController(
+    IProposalTextExtractor textExtractor,
+    IProposalAnalysisService analysisService,
+    AiProviderOptions? aiOptions = null,
+    FoundryLocalModelState? foundryLocalState = null) : Controller
 {
     private readonly IProposalTextExtractor _textExtractor = textExtractor;
     private readonly IProposalAnalysisService _analysisService = analysisService;
+    private readonly AiProviderOptions _aiOptions = aiOptions ?? new AiProviderOptions();
+    private readonly FoundryLocalModelState _foundryLocalState = foundryLocalState ?? new FoundryLocalModelState();
 
     public IActionResult Index()
     {
+        ViewBag.ModelStatus = GetCurrentModelStatus();
         return View();
+    }
+
+    [HttpGet]
+    public IActionResult ModelStatus()
+    {
+        return Json(GetCurrentModelStatus());
+    }
+
+    private AiModelStatusViewModel GetCurrentModelStatus()
+    {
+        if (_aiOptions.Provider != AiProvider.FoundryLocal)
+        {
+            return new AiModelStatusViewModel
+            {
+                Provider = _aiOptions.Provider.ToString(),
+                IsReady = true,
+                Stage = "Ready",
+                ProgressPercent = 100,
+                Message = "Ready"
+            };
+        }
+
+        var isReady = _foundryLocalState.IsReady;
+        var fault = _foundryLocalState.Fault;
+        var stage = _foundryLocalState.Stage;
+        var progress = _foundryLocalState.ProgressPercent;
+        var message = _foundryLocalState.StatusMessage;
+
+        return new AiModelStatusViewModel
+        {
+            Provider = "FoundryLocal",
+            IsReady = isReady,
+            IsFaulted = fault != null,
+            Stage = stage.ToString(),
+            ProgressPercent = progress,
+            Message = message
+        };
     }
 
     public IActionResult Privacy()
