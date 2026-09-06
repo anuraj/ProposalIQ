@@ -8,7 +8,7 @@ namespace ProposalIQ.Web.Services;
 
 public static class ChatClientFactory
 {
-    public static IChatClient Create(AiProviderOptions options)
+    public static IChatClient Create(AiProviderOptions options, FoundryLocalModelState? foundryLocalState = null)
     {
         return options.Provider switch
         {
@@ -24,9 +24,17 @@ public static class ChatClientFactory
                 "Ai:Local:Model", options.Local.Model,
                 "Ai:Local:Endpoint", options.Local.Endpoint,
                 allowEmptyApiKey: true),
+            AiProvider.FoundryLocal => CreateFoundryLocal(options.FoundryLocal, foundryLocalState ?? new FoundryLocalModelState()),
             _ => throw new InvalidOperationException(
                 $"Unsupported AI provider '{options.Provider}'. Supported values: {string.Join(", ", Enum.GetNames<AiProvider>())}.")
         };
+    }
+
+    private static IChatClient CreateFoundryLocal(FoundryLocalOptions options, FoundryLocalModelState state)
+    {
+        RequireNonBlank("Ai:FoundryLocal:ModelAlias", options.ModelAlias);
+
+        return new FoundryLocalChatClient(state);
     }
 
     private static IChatClient CreateOpenAi(OpenAiOptions options)

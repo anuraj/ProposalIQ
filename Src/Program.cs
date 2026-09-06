@@ -11,7 +11,8 @@ if (string.IsNullOrWhiteSpace(aiOptions.OpenRouter.ApiKey))
     aiOptions.OpenRouter.ApiKey = builder.Configuration["OpenRouter:ApiKey"] ?? string.Empty;
 }
 
-var chatClient = ChatClientFactory.Create(aiOptions);
+var foundryLocalState = new FoundryLocalModelState();
+var chatClient = ChatClientFactory.Create(aiOptions, foundryLocalState);
 
 builder.Services.AddChatClient(chatClient);
 
@@ -19,6 +20,15 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IProposalAnalysisService, ProposalAnalysisService>();
 builder.Services.AddScoped<IProposalTextExtractor, ProposalTextExtractor>();
+
+if (aiOptions.Provider == AiProvider.FoundryLocal)
+{
+    builder.Services.AddSingleton(foundryLocalState);
+    builder.Services.AddHostedService(sp => new FoundryLocalModelPreparationService(
+        aiOptions.FoundryLocal,
+        foundryLocalState,
+        sp.GetRequiredService<ILogger<FoundryLocalModelPreparationService>>()));
+}
 
 var app = builder.Build();
 

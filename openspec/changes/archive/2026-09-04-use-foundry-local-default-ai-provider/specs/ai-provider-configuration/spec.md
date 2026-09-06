@@ -1,10 +1,4 @@
-# AI Provider Configuration
-
-## Purpose
-
-Defines how ProposalIQ selects and validates the configured AI chat provider used for proposal analysis.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Configurable AI Provider Selection
 The system SHALL select the AI chat provider used for proposal analysis from configuration, defaulting to Foundry Local when no provider is explicitly configured.
@@ -66,6 +60,8 @@ The system SHALL validate the required settings for the selected provider at sta
 - **GIVEN** `Ai:Provider` is set to `FoundryLocal` and `Ai:FoundryLocal:ModelAlias` is missing or blank
 - **WHEN** the application starts
 - **THEN** the system throws an `InvalidOperationException` identifying the missing setting name before the host runs
+
+## ADDED Requirements
 
 ### Requirement: Foundry Local Model Availability
 The system SHALL prepare the default Foundry Local model in the background without blocking application startup, and SHALL reject proposal analysis requests with a clear error until the model finishes preparing or report a clear error if preparation failed.

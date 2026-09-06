@@ -24,13 +24,22 @@ Tests/                    ProposalIQ.Web.Tests test project
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- Access to an AI chat provider: [OpenRouter](https://openrouter.ai/) (default), OpenAI, Azure OpenAI, or a local OpenAI-compatible server (e.g. Ollama, LM Studio)
+- [Foundry Local](https://www.foundrylocal.ai/) installed and available on the machine (default provider), or access to an alternate AI chat provider: [OpenRouter](https://openrouter.ai/), OpenAI, Azure OpenAI, or a local OpenAI-compatible server (e.g. Ollama, LM Studio)
 
 ## Configuration
 
-The app selects its AI provider from the `Ai:Provider` configuration key (`OpenRouter`, `OpenAI`, `AzureOpenAI`, or `Local`), defaulting to `OpenRouter` if unset. Set secrets via .NET user secrets (or another configuration provider) from the `Src` folder — never commit real keys.
+The app selects its AI provider from the `Ai:Provider` configuration key (`FoundryLocal`, `OpenRouter`, `OpenAI`, `AzureOpenAI`, or `Local`), defaulting to `FoundryLocal` if unset. Set secrets via .NET user secrets (or another configuration provider) from the `Src` folder — never commit real keys.
 
-**OpenRouter (default)**
+**Foundry Local (default)**
+
+The app downloads and loads the configured model in the background at startup using the `Microsoft.AI.Foundry.Local` SDK; no API key is required. Until the model finishes preparing (or if preparation fails), proposal analysis requests return a clear "model not ready"/"model failed to prepare" error.
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "FoundryLocal"
+dotnet user-secrets set "Ai:FoundryLocal:ModelAlias" "qwen2.5-0.5b"
+```
+
+**OpenRouter**
 
 ```powershell
 dotnet user-secrets set "Ai:Provider" "OpenRouter"
@@ -84,6 +93,7 @@ dotnet test
 
 - ASP.NET Core MVC (.NET 10)
 - `Microsoft.Extensions.AI` / `Microsoft.Extensions.AI.OpenAI` / `Azure.AI.OpenAI` for LLM integration (OpenRouter, OpenAI, Azure OpenAI, or a local OpenAI-compatible server)
+- `Microsoft.AI.Foundry.Local` for the default Foundry Local provider (model discovery, download, load, and chat completions)
 - `DocumentFormat.OpenXml` for `.docx` parsing
 - `UglyToad.PdfPig` for `.pdf` parsing
 - Bootstrap for UI

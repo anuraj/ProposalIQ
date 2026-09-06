@@ -5,12 +5,13 @@ public enum AiProvider
     OpenRouter,
     OpenAI,
     AzureOpenAI,
-    Local
+    Local,
+    FoundryLocal
 }
 
 public class AiProviderOptions
 {
-    public AiProvider Provider { get; set; } = AiProvider.OpenRouter;
+    public AiProvider Provider { get; set; } = AiProvider.FoundryLocal;
 
     public OpenRouterOptions OpenRouter { get; set; } = new();
 
@@ -19,6 +20,8 @@ public class AiProviderOptions
     public AzureOpenAiOptions AzureOpenAI { get; set; } = new();
 
     public LocalOptions Local { get; set; } = new();
+
+    public FoundryLocalOptions FoundryLocal { get; set; } = new();
 }
 
 public class OpenRouterOptions
@@ -51,4 +54,11 @@ public class LocalOptions
     public string Model { get; set; } = string.Empty;
 
     public string Endpoint { get; set; } = "http://localhost:11434/v1/";
+}
+
+public class FoundryLocalOptions
+{
+    public string AppName { get; set; } = "ProposalIQ";
+
+    public string ModelAlias { get; set; } = "qwen2.5-0.5b";
 }

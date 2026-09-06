@@ -62,6 +62,33 @@ namespace ProposalIQ.Web.Tests
         }
 
         [Fact]
+        public void Create_ReturnsChatClient_ForFoundryLocalProvider_WithoutApiKey()
+        {
+            var options = new AiProviderOptions
+            {
+                Provider = AiProvider.FoundryLocal,
+                FoundryLocal = new FoundryLocalOptions { ModelAlias = "qwen2.5-0.5b" }
+            };
+
+            var chatClient = ChatClientFactory.Create(options);
+
+            Assert.NotNull(chatClient);
+        }
+
+        [Fact]
+        public void Create_Throws_ForFoundryLocalProvider_WhenModelAliasIsMissing()
+        {
+            var options = new AiProviderOptions
+            {
+                Provider = AiProvider.FoundryLocal,
+                FoundryLocal = new FoundryLocalOptions { ModelAlias = string.Empty }
+            };
+
+            var exception = Assert.Throws<InvalidOperationException>(() => ChatClientFactory.Create(options));
+            Assert.Contains("Ai:FoundryLocal:ModelAlias", exception.Message);
+        }
+
+        [Fact]
         public void Create_Throws_WhenRequiredSettingIsMissing()
         {
             var options = new AiProviderOptions
