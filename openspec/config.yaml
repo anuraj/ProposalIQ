@@ -20,6 +20,7 @@ rules:
     - Reference existing patterns before inventing new ones
   tasks:
     - Break tasks into chunks of max 2 hours
+    - Always create a git branch for new work
 
 operations:
   apply:
