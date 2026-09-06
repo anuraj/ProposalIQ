@@ -168,12 +168,13 @@ namespace ProposalIQ.Web.Tests
         {
             var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
             var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
-            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.OpenAI };
+            var mockConfigService = new Mock<IAiConfigurationService>();
+            mockConfigService.Setup(c => c.GetOptions()).Returns(new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.OpenAI });
 
             var controller = new HomeController(
                 mockProposalTextExtractor.Object,
                 mockProposalAnalysisService.Object,
-                aiOptions,
+                mockConfigService.Object,
                 new FoundryLocalModelState());
 
             var result = controller.ModelStatus();
@@ -192,14 +193,15 @@ namespace ProposalIQ.Web.Tests
         {
             var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
             var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
-            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal };
+            var mockConfigService = new Mock<IAiConfigurationService>();
+            mockConfigService.Setup(c => c.GetOptions()).Returns(new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal });
             var foundryLocalState = new FoundryLocalModelState();
             foundryLocalState.SetDownloading(55, "Downloading model weights...");
 
             var controller = new HomeController(
                 mockProposalTextExtractor.Object,
                 mockProposalAnalysisService.Object,
-                aiOptions,
+                mockConfigService.Object,
                 foundryLocalState);
 
             var result = controller.ModelStatus();
@@ -220,14 +222,15 @@ namespace ProposalIQ.Web.Tests
         {
             var mockProposalTextExtractor = new Mock<IProposalTextExtractor>();
             var mockProposalAnalysisService = new Mock<IProposalAnalysisService>();
-            var aiOptions = new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal };
+            var mockConfigService = new Mock<IAiConfigurationService>();
+            mockConfigService.Setup(c => c.GetOptions()).Returns(new Configuration.AiProviderOptions { Provider = Configuration.AiProvider.FoundryLocal });
             var foundryLocalState = new FoundryLocalModelState();
             foundryLocalState.MarkFaulted(new InvalidOperationException("Download server unavailable"), "Failed to download model");
 
             var controller = new HomeController(
                 mockProposalTextExtractor.Object,
                 mockProposalAnalysisService.Object,
-                aiOptions,
+                mockConfigService.Object,
                 foundryLocalState);
 
             var result = controller.ModelStatus();

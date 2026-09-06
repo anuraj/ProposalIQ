@@ -58,9 +58,26 @@
 
             <div class="piq-header-actions">
 
+                <a asp-controller="Settings"
+                   asp-action="Index"
+                   class="piq-settings-btn"
+                   title="AI Settings"
+                   aria-label="AI Settings">
+
+                    <i class="bi bi-sliders"
+                       aria-hidden="true"></i>
+
+                    <span>
+                        AI Settings
+                    </span>
+
+                </a>
+
                 <a asp-controller="Home"
                    asp-action="Index"
-                   class="piq-new-analysis">
+                   class="piq-new-analysis"
+                   title="New analysis"
+                   aria-label="New analysis">
 
                     <i class="bi bi-plus-lg"
                        aria-hidden="true"></i>

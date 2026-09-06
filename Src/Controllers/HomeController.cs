@@ -9,12 +9,12 @@ namespace ProposalIQ.Web.Controllers;
 public class HomeController(
     IProposalTextExtractor textExtractor,
     IProposalAnalysisService analysisService,
-    AiProviderOptions? aiOptions = null,
+    IAiConfigurationService? configService = null,
     FoundryLocalModelState? foundryLocalState = null) : Controller
 {
     private readonly IProposalTextExtractor _textExtractor = textExtractor;
     private readonly IProposalAnalysisService _analysisService = analysisService;
-    private readonly AiProviderOptions _aiOptions = aiOptions ?? new AiProviderOptions();
+    private readonly IAiConfigurationService? _configService = configService;
     private readonly FoundryLocalModelState _foundryLocalState = foundryLocalState ?? new FoundryLocalModelState();
 
     public IActionResult Index()
@@ -31,11 +31,13 @@ public class HomeController(
 
     private AiModelStatusViewModel GetCurrentModelStatus()
     {
-        if (_aiOptions.Provider != AiProvider.FoundryLocal)
+        var aiOptions = _configService?.GetOptions() ?? new AiProviderOptions();
+
+        if (aiOptions.Provider != AiProvider.FoundryLocal)
         {
             return new AiModelStatusViewModel
             {
-                Provider = _aiOptions.Provider.ToString(),
+                Provider = aiOptions.Provider.ToString(),
                 IsReady = true,
                 Stage = "Ready",
                 ProgressPercent = 100,

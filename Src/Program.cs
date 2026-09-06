@@ -1,17 +1,19 @@
+using Microsoft.Extensions.AI;
 using ProposalIQ.Web.Configuration;
 using ProposalIQ.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var aiOptions = builder.Configuration.GetSection("Ai")
-    .Get<AiProviderOptions>() ?? new AiProviderOptions();
+builder.Services.Configure<AiProviderOptions>(
+    builder.Configuration.GetSection("Ai"));
 
 var foundryLocalState = new FoundryLocalModelState();
-var chatClient = ChatClientFactory.Create(aiOptions, foundryLocalState);
-
-builder.Services.AddChatClient(chatClient);
-builder.Services.AddSingleton(aiOptions);
 builder.Services.AddSingleton(foundryLocalState);
+builder.Services.AddSingleton<IAiConfigurationService, JsonFileAiConfigurationService>();
+builder.Services.AddSingleton<IFoundryLocalModelManager, FoundryLocalModelManager>();
+builder.Services.AddSingleton<IChatClient, DynamicChatClient>();
+
+builder.Services.AddHostedService<FoundryLocalModelPreparationService>();
 
 builder.Services.Configure<AnalysisCacheOptions>(
     builder.Configuration.GetSection(AnalysisCacheOptions.SectionName));
@@ -21,14 +23,6 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IProposalAnalysisService, ProposalAnalysisService>();
 builder.Services.AddScoped<IProposalTextExtractor, ProposalTextExtractor>();
-
-if (aiOptions.Provider == AiProvider.FoundryLocal)
-{
-    builder.Services.AddHostedService(sp => new FoundryLocalModelPreparationService(
-        aiOptions.FoundryLocal,
-        foundryLocalState,
-        sp.GetRequiredService<ILogger<FoundryLocalModelPreparationService>>()));
-}
 
 var app = builder.Build();
 

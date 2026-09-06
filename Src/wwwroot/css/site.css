@@ -1087,10 +1087,11 @@ body {
 
 
 /* =========================================================
-   NEW ANALYSIS
+   HEADER BUTTONS / NEW ANALYSIS & SETTINGS
    ========================================================= */
 
-.piq-new-analysis {
+.piq-new-analysis,
+.piq-settings-btn {
     height: 36px;
 
     display: inline-flex;
@@ -1120,7 +1121,8 @@ body {
 }
 
 
-.piq-new-analysis:hover {
+.piq-new-analysis:hover,
+.piq-settings-btn:hover {
     color: #6366f1;
     border-color: #6366f1;
     background: rgba(99, 102, 241, 0.07);
@@ -1129,7 +1131,8 @@ body {
 }
 
 
-.piq-new-analysis i {
+.piq-new-analysis i,
+.piq-settings-btn i {
     font-size: 13px;
 }
 
@@ -1254,7 +1257,8 @@ body {
 }
 
 
-[data-bs-theme="dark"] .piq-new-analysis:hover {
+[data-bs-theme="dark"] .piq-new-analysis:hover,
+[data-bs-theme="dark"] .piq-settings-btn:hover {
     background: rgba(99, 102, 241, 0.12);
 }
 
@@ -1288,7 +1292,8 @@ body {
     }
 
 
-    .piq-new-analysis {
+    .piq-new-analysis,
+    .piq-settings-btn {
         width: 36px;
         height: 36px;
 
@@ -1296,7 +1301,8 @@ body {
     }
 
 
-    .piq-new-analysis span {
+    .piq-new-analysis span,
+    .piq-settings-btn span {
         display: none;
     }
 
