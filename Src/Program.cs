@@ -13,6 +13,10 @@ builder.Services.AddChatClient(chatClient);
 builder.Services.AddSingleton(aiOptions);
 builder.Services.AddSingleton(foundryLocalState);
 
+builder.Services.Configure<AnalysisCacheOptions>(
+    builder.Configuration.GetSection(AnalysisCacheOptions.SectionName));
+builder.Services.AddSingleton<IProposalAnalysisCache, SqliteProposalAnalysisCache>();
+
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IProposalAnalysisService, ProposalAnalysisService>();

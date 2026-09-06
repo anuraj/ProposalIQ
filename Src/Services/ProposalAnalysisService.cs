@@ -3,9 +3,10 @@ using ProposalIQ.Web.Models;
 
 namespace ProposalIQ.Web.Services;
 
-public class ProposalAnalysisService(IChatClient chatClient) : IProposalAnalysisService
+public class ProposalAnalysisService(IChatClient chatClient, IProposalAnalysisCache? cache = null) : IProposalAnalysisService
 {
     private readonly IChatClient _chatClient = chatClient;
+    private readonly IProposalAnalysisCache? _cache = cache;
 
     public async Task<ProposalAnalysisResult> AnalyzeAsync(
         string proposalText,
@@ -17,6 +18,17 @@ public class ProposalAnalysisService(IChatClient chatClient) : IProposalAnalysis
             throw new ArgumentException(
                 "Proposal text cannot be empty.",
                 nameof(proposalText));
+        }
+
+        string? cacheKey = null;
+        if (_cache != null)
+        {
+            cacheKey = _cache.ComputeCacheKey(proposalText, request);
+            var cachedResult = await _cache.GetAsync(cacheKey, cancellationToken);
+            if (cachedResult != null)
+            {
+                return cachedResult;
+            }
         }
 
         var dealContext = BuildDealContext(request);
@@ -87,7 +99,14 @@ public class ProposalAnalysisService(IChatClient chatClient) : IProposalAnalysis
                 options,
                 cancellationToken: cancellationToken);
 
-        return response.Result;
+        var result = response.Result ?? new ProposalAnalysisResult();
+
+        if (_cache != null && cacheKey != null)
+        {
+            await _cache.SetAsync(cacheKey, result, cancellationToken);
+        }
+
+        return result;
     }
 
     private static string BuildDealContext(
